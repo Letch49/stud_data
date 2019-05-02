@@ -3,10 +3,18 @@ const cheerio = require('cheerio');
 var iconv = require('iconv-lite');
 const fs = require('fs');
 
-const prepeareUrl = (url, num) => `${url}${num}`;
-let uri = 'http://students.vvsu.ru/results/stud/';
-let startValue = 126802;
+const prepeareUrl = (url, num) => `${url}${num}`; // функция объеденяет url и число (id студента в данном случае)
 
+let uri = 'http://students.vvsu.ru/results/stud/'; // url адрес
+let startValue = 126802; // с какого id Начинаем, можно начинать с 1
+
+
+/**
+ * 
+ * @param {string} uri - url куда заходить
+ * @param {int} page - id студента
+ * @return следующего студента, рекурсивная функция короче
+ */
 const iter = (uri, page) => {
   request(prepeareUrl(uri, page), { encoding: null }, (err, response, body) => {
     if (err) {
@@ -40,8 +48,9 @@ const iter = (uri, page) => {
   });
 };
 
-iter(uri, startValue);
+iter(uri, startValue); // вызов рекурсивной функции, а далее она вызвается сама
 
+// Подготовка данных о курсе и направлении образования
 const parseCourse = (string) => {
   return string.split('b').slice(1, 4).map((el, idx) => {
     if (idx === 0) {
@@ -58,6 +67,7 @@ const parseCourse = (string) => {
   });
 };
 
+// подготовка данных о предмете, результате, баллах
 const mappingResults = (arr) => {
   return arr.map((el, idx) => {
     if (idx === 0) {
@@ -73,7 +83,9 @@ const mappingResults = (arr) => {
   }).filter(el => el != undefined);
 }
 
+// возвращаем объект в reutrn описан возвращаемый объект, тут лишних слов не нужно
 const obj = (fio, about, chemestry, predmet) => {
+  // парсим итоговый результат в нормальный вид, хз почему скрипт парсит неправильно
   const parserResult = (res) => {
     if (res === 'За') {
       return 'Зачтено'
@@ -101,6 +113,7 @@ const obj = (fio, about, chemestry, predmet) => {
   }
 };
 
+//
 const getResults = (chemestry, predmet) => {
   return {
     'Семестр': chemestry,
@@ -108,11 +121,11 @@ const getResults = (chemestry, predmet) => {
   }
 }
 
-
+// таблица данных
 const jsonArray = {
   table: []
 }
-
+// чтение данных и перезапись
 const reader = (path, mydata) => {
   const data = fs.readFileSync(path, 'utf-8');
   let saveData = JSON.parse(data);
@@ -120,7 +133,7 @@ const reader = (path, mydata) => {
   let json = JSON.stringify(saveData);
   fs.writeFileSync(path, json, 'utf8');
 }
-
+// чтение данных и перезапись
 const save = (path, mdata) => {
   fs.access('data.json', (err) => {
     if (err) {
@@ -130,11 +143,4 @@ const save = (path, mdata) => {
       reader(path, mdata);
     }
   })
-}
-
-
-const sleep = (n) => {
-  for (let i = 0; i < n; i++) {
-
-  }
 }
